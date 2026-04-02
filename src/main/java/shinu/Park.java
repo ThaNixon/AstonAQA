@@ -4,9 +4,9 @@ public class Park
 {
     public  class Attraction
     {
-        public String name;
-        public String workingHours;
-        float price;
+        private String name;
+        private String workingHours;
+        private double price;
 
         public Attraction(String name, String workingHours, float price)
         {

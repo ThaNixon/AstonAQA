@@ -1,18 +1,18 @@
 package shinu;
 
 public class Product {
-    public String name;
-    public String date;
-    public String developer;
-    public String country;
-    public float price;
-    public Boolean status;
+    private String name;
+    private String date;
+    private String developer;
+    private String country;
+    private double price;
+    private Boolean status;
 
-    public Product(String name,
+    Product(String name,
                    String date,
                    String developer,
                    String country,
-                   float price,
+                   double price,
                    Boolean status)
     {
         this.name = name;
