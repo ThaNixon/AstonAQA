@@ -1,6 +1,8 @@
 import Page.MainPage;
 import Page.PaymentPage;
 import io.github.bonigarcia.wdm.WebDriverManager;
+import io.qameta.allure.Description;
+import io.qameta.allure.Feature;
 import org.junit.jupiter.api.*;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
@@ -38,11 +40,17 @@ public class MtsTests {
     }
 
     @Test
+    @Feature("Блок услуг")
+    @DisplayName("Проверка названия блока'")
+    @Description("Проверяет правильное наименование блока с оплатой услуг")
     void checkBlockName() {
         assertTrue(mainPage.isBlockNameDisplayed());
     }
 
     @Test
+    @Feature("Блок услуг")
+    @DisplayName("Проверка логотипов сервисов оплаты'")
+    @Description("Проверяет наличие всех логотипов сервисов оплаты")
     void checkPaymentLogos() {
         List<WebElement> logos = mainPage.getPaymentLogos();
         assertEquals(5, logos.size());
@@ -50,6 +58,17 @@ public class MtsTests {
     }
 
     @Test
+    @Feature("Блок услуг")
+    @DisplayName("Проверка ссылки 'Подробнее о сервисе'")
+    @Description("Проверяет переход по ссылке подробной информации о сервисе оплаты")
+    void checkAboutServiceLink() {
+        mainPage.clickAboutService();
+    }
+
+    @Test
+    @Feature("Оплата")
+    @DisplayName("Проверка кнопки Продолжить")
+    @Description("Проверяет открытие формы оплаты услуги после нажатия кнопки Продолжить")
     void checkContinue() {
         mainPage.fillFormAndContinue("297777777", "10");
         paymentPage.switchToFrame();
@@ -58,6 +77,9 @@ public class MtsTests {
     }
 
     @Test
+    @Feature("Блок услуг")
+    @DisplayName("Проверка плейсхолдеров для всех услуг")
+    @Description("Проверка подсказок в поле ввода при переключении типа услуги")
     void testPlaceholdersForAllServices() {
         mainPage.selectService("Услуги связи");
         assertEquals("Номер телефона", mainPage.getPlaceholderText(mainPage.getPhoneField("Услуги связи")));
@@ -73,6 +95,9 @@ public class MtsTests {
     }
 
     @Test
+    @Feature("Оплата")
+    @DisplayName("Проверка полной оплаты")
+    @Description("Проверка формы оплаты с информацией введённой ранее в блоке услуг")
     void testMtsPaymentFlow() {
         mainPage.fillFormAndContinue("297777777", "130.00");
         paymentPage.switchToFrame();

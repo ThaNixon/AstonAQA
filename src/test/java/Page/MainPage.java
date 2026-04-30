@@ -1,5 +1,6 @@
 package Page;
 
+import io.qameta.allure.Step;
 import org.openqa.selenium.*;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
@@ -22,15 +23,23 @@ public class MainPage {
         this.wait = new WebDriverWait(driver, Duration.ofSeconds(10));
     }
 
+    @Step("ПРоверка названия блока")
     public boolean isBlockNameDisplayed() {
         return wait.until(ExpectedConditions.visibilityOfElementLocated(blockName)).isDisplayed();
     }
 
+    @Step("Получение логотипов платёжных систем")
     public List<WebElement> getPaymentLogos() {
         return driver.findElements(paymentLogos);
     }
 
+    private final By aboutServiceLink = By.xpath("//a[contains(text(), 'Подробнее о сервисе')]");
+    @Step("Нажать на ссылку 'Подробнее о сервисе'")
+    public void clickAboutService() {
+        wait.until(ExpectedConditions.elementToBeClickable(aboutServiceLink)).click();
+    }
 
+    @Step("Выбрать услугу: {0}")
     public void selectService(String serviceName) {
         WebElement header = wait.until(ExpectedConditions.elementToBeClickable(selectHeader));
         if (!header.getText().trim().equalsIgnoreCase(serviceName)) {
@@ -40,11 +49,13 @@ public class MainPage {
         }
     }
 
+    @Step("Прочитать текст плейсхолдера из элемента")
     public String getPlaceholderText(WebElement element) {
         wait.until(ExpectedConditions.visibilityOf(element));
         return element.getDomAttribute("placeholder");
     }
 
+    @Step("Заполнить форму: телефон {0}, сумма {1}")
     public void fillServiceForm(String phone, String sum) {
         WebElement pField = wait.until(ExpectedConditions.visibilityOfElementLocated(phoneField));
         pField.clear();
@@ -55,24 +66,37 @@ public class MainPage {
         sField.sendKeys(sum + Keys.TAB);
     }
 
+    @Step("Нажать кнопку 'Продолжить'")
     public void clickContinue() {
         WebElement btn = wait.until(ExpectedConditions.elementToBeClickable(continueBtn));
         ((JavascriptExecutor) driver).executeScript("arguments[0].click();", btn);
     }
 
+    @Step("Заполнить форму данными ({0}, {1}) и перейти к оплате")
     public void fillFormAndContinue(String phone, String sum) {
         fillServiceForm(phone, sum);
         clickContinue();
     }
 
+    @Step("Найти поле ввода для услуги: {0}")
     public WebElement getPhoneField(String serviceName) {
-        By locator = switch (serviceName) {
-            case "Услуги связи" -> By.id("connection-phone");
-            case "Домашний интернет" -> By.id("internet-phone");
-            case "Рассрочка" -> By.id("score-instalment");
-            case "Задолженность" -> By.id("score-arrears");
-            default -> throw new IllegalArgumentException("Неизвестная услуга: " + serviceName);
-        };
+        By locator;
+        switch (serviceName) {
+            case "Услуги связи":
+                locator = By.id("connection-phone");
+                break;
+            case "Домашний интернет":
+                locator = By.id("internet-phone");
+                break;
+            case "Рассрочка":
+                locator = By.id("score-instalment");
+                break;
+            case "Задолженность":
+                locator = By.id("score-arrears");
+                break;
+            default:
+                throw new IllegalArgumentException("Неизвестная услуга: " + serviceName);
+        }
         return wait.until(ExpectedConditions.visibilityOfElementLocated(locator));
     }
 }

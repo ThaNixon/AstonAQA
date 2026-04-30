@@ -1,13 +1,21 @@
 plugins {
     id 'java'
+    id 'io.qameta.allure' version '2.11.2'
 }
 
 group = 'shinu'
 version = '1.0-SNAPSHOT'
 
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(11)
+    }
+}
+
 repositories {
     mavenCentral()
 }
+
 
 dependencies {
     testImplementation 'org.slf4j:slf4j-simple:2.0.12'
@@ -20,4 +28,30 @@ dependencies {
 
 test {
     useJUnitPlatform()
+}
+
+allure {
+    version = '2.24.0'
+    adapter {
+        aspectjVersion = '1.9.22'
+        frameworks {
+            junit5 {
+                adapterVersion = '2.24.0'
+            }
+        }
+    }
+}
+test {
+    useJUnitPlatform()
+
+    // Добавьте это:
+    testLogging {
+        events "passed", "skipped", "failed"
+        showStandardStreams = true // Чтобы видеть ваш лог из тестов
+        exceptionFormat = "full"
+    }
+}
+
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
 }
