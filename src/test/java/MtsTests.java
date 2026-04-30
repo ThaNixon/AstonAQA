@@ -1,79 +1,91 @@
+import Page.MainPage;
+import Page.PaymentPage;
 import io.github.bonigarcia.wdm.WebDriverManager;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
-
 import java.time.Duration;
 import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class MtsTests {
-    private static WebDriverWait wait;
     private WebDriver driver;
+    private MainPage mainPage;
+    private PaymentPage paymentPage;
 
     @BeforeEach
     public void setupDriver() {
         WebDriverManager.chromedriver().setup();
         driver = new ChromeDriver();
         driver.manage().window().maximize();
-        wait = new WebDriverWait(driver, Duration.ofSeconds(10));
         driver.get("https://www.mts.by/");
+        mainPage = new MainPage(driver);
+        paymentPage = new PaymentPage(driver);
 
         try {
-            WebElement cookies = wait.until(ExpectedConditions.elementToBeClickable(By.id("cookie-agree")));
-            cookies.click();
-        }  catch (Exception ignored) {}
+            new WebDriverWait(driver, Duration.ofSeconds(5))
+                    .until(ExpectedConditions.elementToBeClickable(By.id("cookie-agree"))).click();
+        } catch (Exception ignored) {}
     }
 
     @AfterEach
     public void teardown() {
-        if (driver != null) {
-            driver.quit();
-        }
+        if (driver != null) driver.quit();
     }
 
     @Test
     void checkBlockName() {
-        WebElement blockName = wait.until(ExpectedConditions.visibilityOfElementLocated(
-                By.xpath("//*[@id=\"pay-section\"]/div/div/div[2]/section/div/h2")
-        ));
-        assertTrue(blockName.isDisplayed());
+        assertTrue(mainPage.isBlockNameDisplayed());
     }
 
     @Test
-    void checkPaymantLogos() {
-        List<WebElement> paymantLogos = driver.findElements(By.xpath("//div[@class='pay__partners']//img"));
-        assertEquals(5, paymantLogos.size());
-        for (WebElement logo : paymantLogos) {
-            assertTrue(logo.isDisplayed());
-        }
-    }
-
-    @Test
-    void checkAboutService() {
-        WebElement serviceButton = driver.findElement(By.xpath("//*[@id=\"pay-section\"]/div/div/div[2]/section/div/a"));
-        serviceButton.click();
+    void checkPaymentLogos() {
+        List<WebElement> logos = mainPage.getPaymentLogos();
+        assertEquals(5, logos.size());
+        logos.forEach(logo -> assertTrue(logo.isDisplayed()));
     }
 
     @Test
     void checkContinue() {
-        driver.findElement(By.id("connection-phone")).sendKeys("297777777");
-        driver.findElement(By.id("connection-sum")).sendKeys("130");
-        driver.findElement(By.xpath("//*[@id='pay-connection']/button")).click();
-        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(20));
-        wait.until(ExpectedConditions.frameToBeAvailableAndSwitchToIt(
-                By.cssSelector("iframe[src*='bepaid']")
-        ));
-        WebElement ccInput = wait.until(ExpectedConditions.presenceOfElementLocated(By.id("cc-number")));
-        assertTrue(ccInput.isDisplayed());
-        driver.switchTo().defaultContent();
+        mainPage.fillFormAndContinue("297777777", "10");
+        paymentPage.switchToFrame();
+        assertTrue(paymentPage.isCcInputFieldDisplayed());
+        paymentPage.leaveFrame();
+    }
+
+    @Test
+    void testPlaceholdersForAllServices() {
+        mainPage.selectService("Услуги связи");
+        assertEquals("Номер телефона", mainPage.getPlaceholderText(mainPage.getPhoneField("Услуги связи")));
+
+        mainPage.selectService("Домашний интернет");
+        assertEquals("Номер абонента", mainPage.getPlaceholderText(mainPage.getPhoneField("Домашний интернет")));
+
+        mainPage.selectService("Рассрочка");
+        assertEquals("Номер счета на 44", mainPage.getPlaceholderText(mainPage.getPhoneField("Рассрочка")));
+
+        mainPage.selectService("Задолженность");
+        assertEquals("Номер счета на 2073", mainPage.getPlaceholderText(mainPage.getPhoneField("Задолженность")));
+    }
+
+    @Test
+    void testMtsPaymentFlow() {
+        mainPage.fillFormAndContinue("297777777", "130.00");
+        paymentPage.switchToFrame();
+
+        assertTrue(paymentPage.getAmountFromHeader().contains("130.00"));
+        assertTrue(paymentPage.getAmountFromButton().contains("130.00"));
+        assertTrue(paymentPage.getPhoneNumber().contains("297777777"));
+
+        assertEquals("Номеркарты", paymentPage.getCardFieldPlaceholder("number"));
+        assertTrue(paymentPage.getCardFieldPlaceholder("expiry").contains("ММ/ГГ"));
+        assertEquals("CVC", paymentPage.getCardFieldPlaceholder("cvc"));
+        assertTrue(paymentPage.areIconsDisplayed());
+
+        paymentPage.leaveFrame();
     }
 }
