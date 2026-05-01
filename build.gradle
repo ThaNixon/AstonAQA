@@ -44,10 +44,9 @@ allure {
 test {
     useJUnitPlatform()
 
-    // Добавьте это:
     testLogging {
         events "passed", "skipped", "failed"
-        showStandardStreams = true // Чтобы видеть ваш лог из тестов
+        showStandardStreams = true
         exceptionFormat = "full"
     }
 }
